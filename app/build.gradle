@@ -1,16 +1,25 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+
+    //kotlinx
+    id "org.jetbrains.kotlin.plugin.serialization" version "1.8.0"
+
+    id 'kotlin-kapt'
+
+    //hilt
+    id 'com.google.dagger.hilt.android'
+
 }
 
 android {
     namespace 'com.example.binsearcher'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.binsearcher"
         minSdk 24
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -37,7 +46,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.1.1'
+        kotlinCompilerExtensionVersion '1.4.0'
     }
     packagingOptions {
         resources {
@@ -47,15 +56,32 @@ android {
 }
 
 dependencies {
-    def ktor_version = "2.2.2"
 
+    //Room
+    def room_version = "2.5.0"
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+    implementation "androidx.room:room-rxjava3:$room_version"
+    implementation "androidx.room:room-guava:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+
+    //Hilt
+    implementation "com.google.dagger:hilt-android:2.44"
+    kapt "com.google.dagger:hilt-compiler:2.44"
+
+    //Ktor
+    def ktor_version = "2.2.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
-
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1"
-
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+
+
+    //ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1"
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
@@ -69,4 +95,6 @@ dependencies {
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+
+    annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
 }

@@ -1,5 +1,8 @@
-package com.example.binsearcher.data.models.requestModels
+package com.example.binsearcher.data.requestModels.requestModels
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Country(
     val alpha2: String = "",
     val currency: String = "",

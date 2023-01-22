@@ -1,5 +1,8 @@
-package com.example.binsearcher.data.models.requestModels
+package com.example.binsearcher.data.requestModels.requestModels
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Bank(
     val city: String = "?",
     val name: String = "?",
