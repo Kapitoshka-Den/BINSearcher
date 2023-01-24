@@ -2,6 +2,7 @@ package com.example.binsearcher.screens.binSearcher
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -46,7 +47,6 @@ fun BinSearcherView(binViewModel: BinSearcherViewModel = viewModel()) {
                 },
                 binsList = binSearchState.binItems
             )
-            Text(text = binSearchState.binInfo!!.brand)
             BinInfoContainer(binSearchState.binInfo!!)
         }
     }
@@ -61,59 +61,72 @@ fun BinSearcherView(binViewModel: BinSearcherViewModel = viewModel()) {
 @Composable
 fun BinInfoContainer(binInfo: BinInfo) {
     val context = LocalContext.current
-    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse(binInfo.bank?.phone))
-    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(binInfo.bank?.url))
-    Row(horizontalArrangement = Arrangement.SpaceAround) {
-        Column() {
-            Text(text = "Scheme / network:" + binInfo.scheme)
-            Text(
-                text = stringResource(
-                    id = R.string.country_info,
-                    binInfo.country?.emoji ?: "?",
-                    binInfo.country?.name ?: "?"
-                )
+    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + binInfo.bank?.phone))
+    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("http://" + binInfo.bank?.url))
+    val mapIntent = Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("geo:${binInfo.country?.latitude},${binInfo.country?.longitude}")
+    )
+    mapIntent.setPackage("com.google.android.apps.maps")
+    Column(
+        modifier = Modifier,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = "Scheme / network:" + binInfo.scheme)
+        Text(text = "Brand: " + binInfo.brand)
+        Text(
+            text = stringResource(
+                id = R.string.number_stats,
+                binInfo.number?.length ?: "?",
+                if (binInfo.number?.luhn == false) "Yes" else "No"
             )
-            Text(text = "Type:" + binInfo.type)
-            Text(
-                text = stringResource(
-                    R.string.bank_addr,
-                    binInfo.bank?.name ?: "?",
-                    binInfo.bank?.city ?: "?"
-                )
+        )
+        Text(text = "Type:" + binInfo.type)
+        Text(text = "Prepaid: " + if (!binInfo.prepaid) "No" else "Yes")
+        Text(
+            text = stringResource(
+                id = R.string.country_info,
+                binInfo.country?.emoji ?: "?",
+                binInfo.country?.name ?: "?"
             )
-        }
-        Column() {
-            Text(text = "Brand: " + binInfo.brand)
-            Text(
-                text = stringResource(
-                    id = R.string.number_stats,
-                    binInfo.number?.length ?: "?",
-                    binInfo.number?.luhn ?: "?"
-                )
-            )
-            Text(text = "Prepaid: " + if (!binInfo.prepaid) "No" else "Yes")
-            Text(text = binInfo.bank?.url ?: "?")
-            Text(
-                text = binInfo.bank?.phone ?: "?",
-                modifier = if (binInfo.bank?.phone != null) Modifier.clickable {
-                    try {
-                        startActivity(context,dialIntent,null)
-                    } catch (s: SecurityException) {
+        )
+        Text(
+            text = stringResource(
+                R.string.country_coordinate,
+                binInfo.country?.latitude ?: "?",
+                binInfo.country?.longitude ?: "?"),
+                modifier = Modifier.clickable {
+                    startActivity(context,mapIntent,null)
+                }
+        )
 
-                    }
-                } else Modifier
+        Text(
+            text = stringResource(
+                R.string.bank_addr,
+                binInfo.bank?.name ?: "?",
+                binInfo.bank?.city ?: "?"
             )
-            Text(
-                text = binInfo.bank?.url ?: "?",
-                modifier = if (binInfo.bank?.url != null) Modifier.clickable {
-                    try {
-                        startActivity(context,browserIntent,null)
-                    } catch (s: SecurityException) {
-
-                    }
-                } else Modifier
-            )
-        }
+        )
+        Text(
+            text = "Bank phone:" + (binInfo.bank?.phone ?: "?"),
+            modifier = if (binInfo.bank?.phone != null) Modifier.clickable {
+                try {
+                    startActivity(context, dialIntent, null)
+                } catch (s: Exception) {
+                    Log.e("tag_ex", s.message.toString())
+                }
+            } else Modifier
+        )
+        Text(
+            text = binInfo.bank?.url ?: "?",
+            modifier = if (binInfo.bank?.url != null) Modifier.clickable {
+                try {
+                    startActivity(context, browserIntent, null)
+                } catch (s: Exception) {
+                    Log.e("tag_ex", s.message.toString())
+                }
+            } else Modifier
+        )
     }
 }
 
