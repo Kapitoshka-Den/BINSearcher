@@ -2,6 +2,6 @@
     <string name="app_name">BIN Searcher</string>
     <string name="country_info">Country: %1s %2s</string>
     <string name="country_coordinate">(latitude: %1d, longitude: %2d)</string>
-    <string name="number_stats">Length: %1s Lunh: %2s</string>
+    <string name="number_stats">Length: %1s; Lunh: %2s</string>
     <string name="bank_addr">Bank: %1s, %2s</string>
 </resources>

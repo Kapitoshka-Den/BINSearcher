@@ -108,7 +108,7 @@ fun BinInfoContainer(binInfo: BinInfo) {
             )
         )
         Text(
-            text = "Bank phone:" + (binInfo.bank?.phone ?: "?"),
+            text = "Bank phone: " + (binInfo.bank?.phone ?: "?"),
             modifier = if (binInfo.bank?.phone != null) Modifier.clickable {
                 try {
                     startActivity(context, dialIntent, null)
@@ -118,7 +118,7 @@ fun BinInfoContainer(binInfo: BinInfo) {
             } else Modifier
         )
         Text(
-            text = binInfo.bank?.url ?: "?",
+            text = "Bank Url: " + (binInfo.bank?.url ?: "?"),
             modifier = if (binInfo.bank?.url != null) Modifier.clickable {
                 try {
                     startActivity(context, browserIntent, null)
