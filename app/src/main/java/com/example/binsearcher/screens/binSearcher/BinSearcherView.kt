@@ -17,9 +17,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.binsearcher.data.database.History.HistoryEntity
+import com.example.binsearcher.data.requestModels.requestModels.BinInfo
 
 @Composable
-fun BinSearcherView(binViewModel: BinSearcherViewModel= viewModel()) {
+fun BinSearcherView(binViewModel: BinSearcherViewModel = viewModel()) {
     val binSearchState by binViewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
@@ -38,12 +39,33 @@ fun BinSearcherView(binViewModel: BinSearcherViewModel= viewModel()) {
                 binsList = binSearchState.binItems
             )
             Text(text = binSearchState.binInfo!!.brand)
+            BinInfoContainer(binSearchState.binInfo!!)
         }
     }
     LaunchedEffect(key1 = binSearchState) {
         try {
             binViewModel.loadHistory()
-        } catch (_:Exception){
+        } catch (_: Exception) {
+        }
+    }
+}
+
+@Composable
+fun BinInfoContainer(binInfo: BinInfo) {
+    Row {
+        Column() {
+            Text(text = "Scheme / network:" + binInfo.scheme)
+            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
+            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
+            OutlinedTextField(value = binInfo.country?.emoji.toString(), enabled = false, onValueChange = {})
+        }
+        Column() {
+            OutlinedTextField(value = "Brand: " + binInfo.brand, enabled = false, onValueChange = {})
+            OutlinedTextField(
+                value = "Lenght: " + binInfo.number?.length.toString() + if (binInfo.number?.luhn == true) "Lunh: Yes" else "Lunh: No",
+                enabled = false,
+                onValueChange = {})
+            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
         }
     }
 }
@@ -52,7 +74,7 @@ fun BinSearcherView(binViewModel: BinSearcherViewModel= viewModel()) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SearchDropDownMenu(
-    state:BinSearchViewState,
+    state: BinSearchViewState,
     onExpandedChange: () -> Unit,
     onValueChange: (String) -> Unit,
     onClick: () -> Unit,
@@ -67,7 +89,6 @@ fun SearchDropDownMenu(
     ) {
         OutlinedTextField(
             isError = state.isError,
-
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 unfocusedBorderColor = Color.Blue,
@@ -79,10 +100,7 @@ fun SearchDropDownMenu(
                 keyboardType = KeyboardType.Number,
             ),
 
-            keyboardActions = KeyboardActions(onDone = {
-                onClick()
-                onExpandedChange()
-            }),
+
             trailingIcon = {
                 IconButton(onClick = {
                     onClick()
@@ -91,7 +109,11 @@ fun SearchDropDownMenu(
                 }) {
                     Row() {
                         Text(text = "Find", color = Color.Blue)
-                        Icon(Icons.Filled.Search, contentDescription = "Search", tint = if(!state.isError)Color.Blue else Color.Red)
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = "Search",
+                            tint = if (!state.isError) Color.Blue else Color.Red
+                        )
                     }
                 }
             },
@@ -100,12 +122,14 @@ fun SearchDropDownMenu(
                 Text(text = "test")
             }
         )
-        ExposedDropdownMenu(expanded = state.expanded, onDismissRequest = { state.expanded = false}) {
+        ExposedDropdownMenu(
+            expanded = state.expanded,
+            onDismissRequest = { state.expanded = false }) {
             binsList?.reversed()?.forEach { item ->
                 DropdownMenuItem(onClick = {
-                    onExpandedChange()
                     onValueChange(item.Bin)
                     state.userSearch = item.Bin
+                    onExpandedChange()
                 }) {
                     Text(text = item.Bin)
                 }
