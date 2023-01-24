@@ -1,5 +1,8 @@
 package com.example.binsearcher.screens.binSearcher
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,13 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.binsearcher.R
 import com.example.binsearcher.data.database.History.HistoryEntity
 import com.example.binsearcher.data.requestModels.requestModels.BinInfo
+import java.net.URI
 
 @Composable
 fun BinSearcherView(binViewModel: BinSearcherViewModel = viewModel()) {
@@ -52,20 +60,59 @@ fun BinSearcherView(binViewModel: BinSearcherViewModel = viewModel()) {
 
 @Composable
 fun BinInfoContainer(binInfo: BinInfo) {
-    Row {
+    val context = LocalContext.current
+    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse(binInfo.bank?.phone))
+    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(binInfo.bank?.url))
+    Row(horizontalArrangement = Arrangement.SpaceAround) {
         Column() {
             Text(text = "Scheme / network:" + binInfo.scheme)
-            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
-            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
-            OutlinedTextField(value = binInfo.country?.emoji.toString(), enabled = false, onValueChange = {})
+            Text(
+                text = stringResource(
+                    id = R.string.country_info,
+                    binInfo.country?.emoji ?: "?",
+                    binInfo.country?.name ?: "?"
+                )
+            )
+            Text(text = "Type:" + binInfo.type)
+            Text(
+                text = stringResource(
+                    R.string.bank_addr,
+                    binInfo.bank?.name ?: "?",
+                    binInfo.bank?.city ?: "?"
+                )
+            )
         }
         Column() {
-            OutlinedTextField(value = "Brand: " + binInfo.brand, enabled = false, onValueChange = {})
-            OutlinedTextField(
-                value = "Lenght: " + binInfo.number?.length.toString() + if (binInfo.number?.luhn == true) "Lunh: Yes" else "Lunh: No",
-                enabled = false,
-                onValueChange = {})
-            OutlinedTextField(value = binInfo.scheme, enabled = false, onValueChange = {})
+            Text(text = "Brand: " + binInfo.brand)
+            Text(
+                text = stringResource(
+                    id = R.string.number_stats,
+                    binInfo.number?.length ?: "?",
+                    binInfo.number?.luhn ?: "?"
+                )
+            )
+            Text(text = "Prepaid: " + if (!binInfo.prepaid) "No" else "Yes")
+            Text(text = binInfo.bank?.url ?: "?")
+            Text(
+                text = binInfo.bank?.phone ?: "?",
+                modifier = if (binInfo.bank?.phone != null) Modifier.clickable {
+                    try {
+                        startActivity(context,dialIntent,null)
+                    } catch (s: SecurityException) {
+
+                    }
+                } else Modifier
+            )
+            Text(
+                text = binInfo.bank?.url ?: "?",
+                modifier = if (binInfo.bank?.url != null) Modifier.clickable {
+                    try {
+                        startActivity(context,browserIntent,null)
+                    } catch (s: SecurityException) {
+
+                    }
+                } else Modifier
+            )
         }
     }
 }
@@ -83,55 +130,49 @@ fun SearchDropDownMenu(
 ) {
     ExposedDropdownMenuBox(
         expanded = state.expanded,
-        onExpandedChange = { onExpandedChange() },
-        modifier = Modifier
-            .padding(10.dp, 0.dp)
+        onExpandedChange = {
+            onExpandedChange()
+        }
     ) {
         OutlinedTextField(
-            isError = state.isError,
-            modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                unfocusedBorderColor = Color.Blue,
-                focusedBorderColor = Color.Blue,
-                cursorColor = Color.Blue
-            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 10.dp),
             value = state.userSearch,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-            ),
-
-
+            onValueChange = onValueChange,
+            label = { Text("Label") },
             trailingIcon = {
                 IconButton(onClick = {
                     onClick()
-                    focusManager.clearFocus()
                     onExpandedChange()
-                }) {
+                }, Modifier.padding(10.dp, 0.dp)) {
                     Row() {
-                        Text(text = "Find", color = Color.Blue)
-                        Icon(
-                            Icons.Filled.Search,
-                            contentDescription = "Search",
-                            tint = if (!state.isError) Color.Blue else Color.Red
-                        )
+                        Text(text = "Find")
+                        Icon(Icons.Default.Search, contentDescription = "Search Button")
                     }
                 }
-            },
-            onValueChange = onValueChange,
-            label = {
-                Text(text = "test")
             }
         )
-        ExposedDropdownMenu(
-            expanded = state.expanded,
-            onDismissRequest = { state.expanded = false }) {
-            binsList?.reversed()?.forEach { item ->
-                DropdownMenuItem(onClick = {
-                    onValueChange(item.Bin)
-                    state.userSearch = item.Bin
+        // filter options based on text field value
+        val filteringOptions =
+            state.binItems?.filter { it.Bin.contains(state.userSearch, ignoreCase = true) }
+                ?.reversed()
+        if (filteringOptions?.isNotEmpty() == true) {
+            ExposedDropdownMenu(
+                expanded = state.expanded,
+                onDismissRequest = {
                     onExpandedChange()
-                }) {
-                    Text(text = item.Bin)
+                }
+            ) {
+                filteringOptions.forEach { selectionOption ->
+                    DropdownMenuItem(
+                        onClick = {
+                            state.userSearch = selectionOption.Bin
+                            onExpandedChange()
+                        }
+                    ) {
+                        Text(text = selectionOption.Bin)
+                    }
                 }
             }
         }
